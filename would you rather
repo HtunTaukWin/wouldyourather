@@ -1,0 +1,193 @@
+import React, { useState, useEffect } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
+import { motion } from 'framer-motion';
+
+const defaultQuestions = [
+  {
+    id: 1,
+    optionA: 'Be invisible for a day',
+    optionB: 'Fly for a day'
+  },
+  {
+    id: 2,
+    optionA: 'Only eat sweet food',
+    optionB: 'Only eat salty food'
+  },
+  {
+    id: 3,
+    optionA: 'Live in space',
+    optionB: 'Live under the sea'
+  },
+  {
+    id: 4,
+    optionA: 'Always be 10 minutes late',
+    optionB: 'Always be 20 minutes early'
+  },
+  {
+    id: 5,
+    optionA: 'Have super strength',
+    optionB: 'Have super speed'
+  },
+  {
+    id: 6,
+    optionA: 'Speak all languages',
+    optionB: 'Talk to animals'
+  },
+  {
+    id: 7,
+    optionA: 'Never use social media again',
+    optionB: 'Never watch TV again'
+  },
+  {
+    id: 8,
+    optionA: 'Be rich and lonely',
+    optionB: 'Be poor and surrounded by friends'
+  },
+  {
+    id: 9,
+    optionA: 'Have the ability to time travel',
+    optionB: 'Have the ability to freeze time'
+  },
+  {
+    id: 10,
+    optionA: 'Always have to sing instead of speak',
+    optionB: 'Always have to dance everywhere you go'
+  }
+];
+
+export default function WouldYouRather() {
+  const [questions, setQuestions] = useState([]);
+  const [index, setIndex] = useState(0);
+  const [votes, setVotes] = useState({});
+  const [voted, setVoted] = useState(false);
+  const [newA, setNewA] = useState('');
+  const [newB, setNewB] = useState('');
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const stored = localStorage.getItem('questions');
+    if (stored) {
+      setQuestions(JSON.parse(stored));
+    } else {
+      setQuestions(defaultQuestions);
+    }
+    setTimeout(() => setLoading(false), 1200);
+  }, []);
+
+  useEffect(() => {
+    if (questions.length > 0) {
+      localStorage.setItem('questions', JSON.stringify(questions));
+    }
+  }, [questions]);
+
+  const current = questions[index] || { optionA: '', optionB: '' };
+
+  const vote = (choice) => {
+    setVotes({ ...votes, [current.id]: choice });
+    setVoted(true);
+    setTimeout(() => {
+      const nextIndex = (index + 1) % questions.length;
+      setIndex(nextIndex);
+      setVoted(false);
+    }, 1000);
+  };
+
+  const submitQuestion = () => {
+    if (newA.trim() && newB.trim()) {
+      const newQuestion = {
+        id: Date.now(),
+        optionA: newA.trim(),
+        optionB: newB.trim(),
+      };
+      setQuestions([...questions, newQuestion]);
+      setNewA('');
+      setNewB('');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#E9F5BE]">
+        <motion.div
+          initial={{ scale: 0.8, opacity: 0 }}
+          animate={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.5, repeat: Infinity, repeatType: 'reverse' }}
+          className="text-[#03A791] text-2xl font-bold"
+        >
+          Loading your question...
+        </motion.div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#E9F5BE] text-center">
+      <motion.h1
+        className="text-3xl md:text-5xl font-bold text-[#03A791] mb-8"
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+      >
+        Htun Tauk's Would You Rather
+      </motion.h1>
+
+      <Card className="w-full max-w-md bg-[#F1BA88] text-black rounded-2xl shadow-xl mb-6">
+        <CardContent className="p-6 space-y-6">
+          <motion.p
+            className="text-xl font-medium"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+          >
+            Would you rather...
+          </motion.p>
+
+          <div className="flex flex-col gap-4">
+            <Button
+              onClick={() => vote('A')}
+              className="bg-[#81E7AF] text-black hover:bg-[#03A791]"
+              disabled={voted || !current.optionA}
+            >
+              {current.optionA}
+            </Button>
+            <Button
+              onClick={() => vote('B')}
+              className="bg-[#81E7AF] text-black hover:bg-[#03A791]"
+              disabled={voted || !current.optionB}
+            >
+              {current.optionB}
+            </Button>
+          </div>
+
+          {voted && <p className="text-sm text-[#03A791]">Thanks for voting! Loading next...</p>}
+        </CardContent>
+      </Card>
+
+      <Card className="w-full max-w-md bg-[#F1BA88] text-black rounded-2xl shadow-xl">
+        <CardContent className="p-6 space-y-4">
+          <h2 className="text-lg font-semibold">Submit Your Own Question</h2>
+          <Input
+            type="text"
+            placeholder="Option A"
+            value={newA}
+            onChange={(e) => setNewA(e.target.value)}
+            className="text-black"
+          />
+          <Input
+            type="text"
+            placeholder="Option B"
+            value={newB}
+            onChange={(e) => setNewB(e.target.value)}
+            className="text-black"
+          />
+          <Button
+            onClick={submitQuestion}
+            className="bg-[#81E7AF] text-black hover:bg-[#03A791]"
+          >
+            Submit
+          </Button>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
